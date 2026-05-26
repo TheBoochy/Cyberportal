@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cyber Threat Intelligence Platform</title>
+
+    <style>
+        body {
+            background-color: #0b0f17;
+            color: #8aff80;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            color: #7CFF7C;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: #141a26;
+            border-left: 6px solid #7CFF7C;
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+        }
+
+        .critical {
+            border-left-color: red;
+        }
+
+        .high {
+            border-left-color: orange;
+        }
+
+        .medium {
+            border-left-color: yellow;
+        }
+
+        .low {
+            border-left-color: green;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: #1b2233;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .type {
+            color: #82aaff;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Cyber Threat Intelligence Platform</h1>
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search threats..."
+    >
+
+    <div id="threats"></div>
+
+    <h1>Latest CVEs</h1>
+
+    <div id="cves"></div>
+
+</div>
+
+<script>
+
+let allThreats = [];
+
+fetch('/api/threats')
+    .then(response => response.json())
+    .then(data => {
+
+        allThreats = data;
+
+        renderThreats(data);
+    });
+
+function renderThreats(data) {
+
+    const container = document.getElementById('threats');
+
+    container.innerHTML = '';
+
+    data.forEach(threat => {
+
+        let severityClass = threat.severity.toLowerCase();
+
+        container.innerHTML += `
+            <div class="card ${severityClass}">
+                <h2>${threat.name}</h2>
+
+                <p class="type">
+                    Type: ${threat.type}
+                </p>
+
+                <p>
+                    Severity: ${threat.severity}
+                </p>
+
+                <p>
+                    ${threat.description}
+                </p>
+            </div>
+        `;
+    });
+}
+
+document.getElementById('search')
+    .addEventListener('input', function() {
+
+        const value = this.value.toLowerCase();
+
+        const filtered = allThreats.filter(threat =>
+            threat.name.toLowerCase().includes(value) ||
+            threat.type.toLowerCase().includes(value) ||
+            threat.severity.toLowerCase().includes(value)
+        );
+
+        renderThreats(filtered);
+    });
+
+fetch('/api/cves')
+    .then(response => response.json())
+    .then(data => {
+
+        const cveContainer = document.getElementById('cves');
+
+        data.forEach(cve => {
+
+            let severityClass = "medium";
+
+            if (cve.severity) {
+                severityClass = cve.severity.toLowerCase();
+            }
+
+            cveContainer.innerHTML += `
+                <div class="card ${severityClass}">
+                    <h2>${cve.id}</h2>
+
+                    <p>
+                        Severity: ${cve.severity}
+                    </p>
+
+                    <p>
+                        CVSS Score: ${cve.cvss}
+                    </p>
+
+                    <p>
+                        ${cve.description}
+                    </p>
+                </div>
+            `;
+        });
+    });
+
+</script>
+
+</body>
+</html>
