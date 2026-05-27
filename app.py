@@ -175,18 +175,80 @@ def ai_analysis():
             nvd_data = nvd_response.json()
             vulnerabilities = nvd_data.get("vulnerabilities", [])
 
+            cve_ids = []
+
             for item in vulnerabilities:
                 cve = item.get("cve", {})
                 found_cve_id = cve.get("id", "Unknown")
+                cve_ids.append(found_cve_id)
+
                 descriptions = cve.get("descriptions", [])
                 description = descriptions[0].get("value", "No description") if descriptions else "No description"
 
+                metrics = cve.get("metrics", {})
+                cvss_score = "N/A"
+                severity = "Unknown"
+
+                if "cvssMetricV31" in metrics:
+                    cvss_data = metrics["cvssMetricV31"][0]["cvssData"]
+                    cvss_score = cvss_data.get("baseScore", "N/A")
+                    severity = cvss_data.get("baseSeverity", "Unknown")
+                elif "cvssMetricV30" in metrics:
+                    cvss_data = metrics["cvssMetricV30"][0]["cvssData"]
+                    cvss_score = cvss_data.get("baseScore", "N/A")
+                    severity = cvss_data.get("baseSeverity", "Unknown")
+                elif "cvssMetricV2" in metrics:
+                    cvss_data = metrics["cvssMetricV2"][0]["cvssData"]
+                    cvss_score = cvss_data.get("baseScore", "N/A")
+                    severity = metrics["cvssMetricV2"][0].get("baseSeverity", "Unknown")
+
                 cve_context += f"""
 CVE: {found_cve_id}
+CVSS: {cvss_score}
+Severity: {severity}
 
 Description:
 {description}
 
+"""
+
+            if cve_ids:
+                epss_url = "https://api.first.org/data/v1/epss?cve=" + ",".join(cve_ids)
+                epss_response = requests.get(epss_url, timeout=10)
+
+                if epss_response.status_code == 200:
+                    epss_data = epss_response.json().get("data", [])
+
+                    cve_context += "\nEPSS Exploit Probability Data:\n"
+
+                    for epss_item in epss_data:
+                        cve_context += f"""
+CVE: {epss_item.get("cve")}
+EPSS Score: {epss_item.get("epss")}
+Percentile: {epss_item.get("percentile")}
+"""
+
+            kev_url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+            kev_response = requests.get(kev_url, timeout=10)
+
+            if kev_response.status_code == 200:
+                kev_data = kev_response.json().get("vulnerabilities", [])
+
+                kev_matches = [
+                    item for item in kev_data
+                    if item.get("cveID") in cve_ids
+                ]
+
+                if kev_matches:
+                    cve_context += "\nCISA KEV Known Exploited Matches:\n"
+
+                    for kev in kev_matches:
+                        cve_context += f"""
+CVE: {kev.get("cveID")}
+Vendor/Product: {kev.get("vendorProject")} / {kev.get("product")}
+Known Ransomware Use: {kev.get("knownRansomwareCampaignUse")}
+Required Action: {kev.get("requiredAction")}
+Due Date: {kev.get("dueDate")}
 """
 
     except Exception:
@@ -197,7 +259,7 @@ Description:
         messages=[
             {
                 "role": "system",
-                "content": "You are a cybersecurity threat intelligence analyst."
+                "content": "You are a cybersecurity threat intelligence analyst. Explain risk clearly, prioritize exploited vulnerabilities, and give practical defensive guidance. Do not provide exploit instructions."
             },
             {
                 "role": "user",
@@ -205,10 +267,15 @@ Description:
 User Question:
 {prompt}
 
-Live CVE Context:
+Live CVE / EPSS / CISA KEV Context:
 {cve_context}
 
-Provide a detailed cybersecurity analysis.
+Provide a detailed cybersecurity analysis with:
+1. Short summary
+2. Most important CVEs
+3. Exploitation risk
+4. Whether any are known exploited
+5. Recommended defensive actions
 """
             }
         ]
@@ -227,7 +294,6 @@ def live_cves():
     url = "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=10"
 
     response = requests.get(url)
-
     data = response.json()
 
     vulnerabilities = data.get("vulnerabilities", [])
@@ -235,32 +301,17 @@ def live_cves():
     results = []
 
     for item in vulnerabilities:
-
         cve = item.get("cve", {})
-
         cve_id = cve.get("id", "Unknown")
 
         descriptions = cve.get("descriptions", [])
-
         description = "No description available"
 
         if descriptions:
             description = descriptions[0].get("value", description)
 
-        metrics = cve.get("metrics", {})
-
-        severity = "UNKNOWN"
-        cvss = "N/A"
-
-        if "cvssMetricV31" in metrics:
-            metric = metrics["cvssMetricV31"][0]
-            severity = metric["cvssData"]["baseSeverity"]
-            cvss = metric["cvssData"]["baseScore"]
-
         results.append({
             "id": cve_id,
-            "severity": severity,
-            "cvss": cvss,
             "description": description
         })
 
