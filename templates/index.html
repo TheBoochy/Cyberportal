@@ -3,7 +3,43 @@
 <head>
     <title>Cyber Threat Intelligence Platform</title>
 
-    <style>
+<style>
+
+.ai-box {
+    margin-top: 40px;
+    padding: 20px;
+    border: 1px solid #00ff88;
+    border-radius: 10px;
+    background-color: #111827;
+}
+
+.ai-box h2 {
+    color: #00ff88;
+}
+
+.ai-box input {
+    width: 80%;
+    padding: 12px;
+    margin-top: 10px;
+    background: #1f2937;
+    color: white;
+    border: 1px solid #00ff88;
+}
+
+.ai-box button {
+    padding: 12px;
+    background: #00ff88;
+    border: none;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#aiResponse {
+    margin-top: 20px;
+    color: #ffffff;
+    white-space: pre-wrap;
+}
+    
         body {
             background-color: #0b0f17;
             color: #8aff80;
@@ -63,7 +99,6 @@
         }
     </style>
 </head>
-
 <body>
 
 <div class="container">
@@ -81,6 +116,23 @@
     <h1>Latest CVEs</h1>
 
     <div id="cves"></div>
+    <div class="ai-box">
+
+    <h2>AI Threat Analysis</h2>
+
+    <input
+        type="text"
+        id="aiPrompt"
+        placeholder="Ask about a CVE or malware..."
+    >
+
+    <button onclick="askAI()">
+        Analyze
+    </button>
+
+    <div id="aiResponse"></div>
+
+</div>
 
 </div>
 
@@ -174,7 +226,24 @@ fetch('/api/cves')
             `;
         });
     });
+async function askAI() {
 
+    const prompt = document.getElementById("aiPrompt").value;
+
+    const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            prompt: prompt
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("aiResponse").innerText = data.response;
+}
 </script>
 
 </body>

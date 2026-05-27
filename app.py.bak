@@ -155,42 +155,60 @@ def get_cves():
 init_db()
 @app.route("/api/ai", methods=["POST"])
 def ai_analysis():
+
     data = request.get_json()
+
+
     prompt = data.get("prompt", "")
 
     cve_context = ""
 
-    try:
-        if "CVE-" in prompt.upper():
-            cve_id = prompt.upper().split("CVE-")[1].split()[0]
-            cve_id = "CVE-" + cve_id
-            nvd_url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id}"
-        else:
-            keyword = prompt.strip().replace(" ", "%20")
-            nvd_url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={keyword}&resultsPerPage=5"
+try:
 
-        nvd_response = requests.get(nvd_url, timeout=10)
+    if "CVE-" in prompt.upper():
 
-        if nvd_response.status_code == 200:
-            nvd_data = nvd_response.json()
-            vulnerabilities = nvd_data.get("vulnerabilities", [])
+        cve_id = prompt.upper().split("CVE-")[1].split()[0]
+        cve_id = "CVE-" + cve_id
 
-            for item in vulnerabilities:
-                cve = item.get("cve", {})
-                found_cve_id = cve.get("id", "Unknown")
-                descriptions = cve.get("descriptions", [])
-                description = descriptions[0].get("value", "No description") if descriptions else "No description"
+        nvd_url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id}"
 
-                cve_context += f"""
-CVE: {found_cve_id}
+    else:
 
-Description:
-{description}
+        keyword = prompt.strip().replace(" ", "%20")
 
-"""
+        nvd_url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={keyword}&resultsPerPage=5"
 
-    except Exception:
-        cve_context = "Unable to retrieve live CVE intelligence."
+    nvd_response = requests.get(nvd_url)
+
+    if nvd_response.status_code == 200:
+
+        nvd_data = nvd_response.json()
+
+        vulnerabilities = nvd_data.get("vulnerabilities", [])
+
+        for item in vulnerabilities:
+
+            cve = item.get("cve", {})
+
+            cve_id = cve.get("id", "Unknown")
+
+            description = "No description"
+
+            descriptions = cve.get("descriptions", [])
+
+            if descriptions:
+                description = descriptions[0].get("value", description)
+
+            cve_context += f"""
+            CVE: {cve_id}
+
+            Description:
+            {description}
+
+            """
+except Exception as e:
+    cve_context = "Unable to retrieve live CVE intelligence."
+
 
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
@@ -214,13 +232,11 @@ Provide a detailed cybersecurity analysis.
         ]
     )
 
-    answer = response.choices[0].message.content
+        answer = response.choices[0].message.content
 
-    return jsonify({
-        "response": answer
-    })
-
-
+        return jsonify({
+            "response": answer
+        })
 @app.route("/api/live-cves")
 def live_cves():
 
