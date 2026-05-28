@@ -177,6 +177,14 @@ button:hover {
     background: #52c7ff !important;
     box-shadow: 0 0 18px rgba(82,199,255,0.8) !important;
 }
+.section-desc {
+    color: #a8c7e6;
+    font-size: 15px;
+    line-height: 1.5;
+    max-width: 900px;
+    margin-top: 6px;
+    margin-bottom: 18px;
+}
 
 </style>
 </head>
@@ -190,7 +198,12 @@ button:hover {
     Use the search bar to look up recent vulnerabilities, vendors, or products, and use the AI section to ask security questions in plain language.
 </p>
 
-    <input
+    <h2>Live CVE Intelligence</h2>
+<p class="section-desc">
+    Search real-time vulnerabilities from the NVD database by CVE ID, vendor, product, or keyword.
+
+</p>
+
 <input
     type="text"
     id="search"
@@ -205,6 +218,9 @@ button:hover {
 <div class="ai-box">
 
     <h2>AI Threat Analysis</h2>
+    <p class="section-desc">
+        Ask cybersecurity questions in plain language and get AI-assisted analysis based on live CVE context.
+</p>
 
     <input
         type="text"
