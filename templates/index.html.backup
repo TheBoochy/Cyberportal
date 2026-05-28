@@ -274,65 +274,90 @@ button:hover {
 </div>
 
 <script>
-function renderCVEs(data) {
-    const cveContainer = document.getElementById("cves");
-    cveContainer.innerHTML = "";
 
-    data.sort((a, b) => {
-        return b.id.localeCompare(a.id);
+let allThreats = [];
+
+fetch('/api/threats')
+    .then(response => response.json())
+    .then(data => {
+
+        allThreats = data;
+
+        renderThreats(data);
     });
 
-    data.forEach(cve => {
-        let severityClass = "unknown";
+function renderThreats(data) {
 
-        if (cve.severity) {
-            severityClass = cve.severity.toLowerCase();
-        }
+    const container = document.getElementById('threats');
 
-        cveContainer.innerHTML += `
-            <div class="card ${severityClass}">
-                <h2>${cve.id}</h2>
-                <p>Severity: ${cve.severity}</p>
-                <p>CVSS Score: ${cve.cvss}</p>
-                <p>${cve.description}</p>
-            </div>
-        `;
-    });
-}
+    container.innerHTML = '';
 
-function loadLiveCVEs() {
-    fetch("/api/live-cves")
-        .then(response => response.json())
-        .then(data => {
-            renderCVEs(data);
-        })
-        .catch(error => {
-            console.error("Error loading live CVEs:", error);
-        });
-}
+    data.forEach(threat => {
 
-async function searchLiveCVEs() {
-    const query = document.getElementById("search").value;
-    const cveContainer = document.getElementById("cves");
+        let severityClass = threat.severity.toLowerCase();
 
-    cveContainer.innerHTML = `
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>Searching live CVE intelligence...</p>
+data.forEach(cve => {
+
+    let severityClass = "unknown";
+
+    if (cve.severity) {
+        severityClass = cve.severity.toLowerCase();
+    }
+
+    container.innerHTML += `
+        <div class="card ${severityClass}">
+            <h2>${cve.id}</h2>
+            <p>Severity: ${cve.severity}</p>
+            <p>CVSS Score: ${cve.cvss}</p>
+            <p>${cve.description}</p>
         </div>
     `;
+});
 
-    const response = await fetch(`/api/search-cves?q=${encodeURIComponent(query)}`);
-    const data = await response.json();
-
-    renderCVEs(data);
-
-    cveContainer.scrollIntoView({
-        behavior: "smooth"
-    });
 }
 
+document.getElementById('search')
+    .addEventListener('input', function() {
+
+        const value = this.value.toLowerCase();
+
+        const filtered = allThreats.filter(threat =>
+            threat.name.toLowerCase().includes(value) ||
+            threat.type.toLowerCase().includes(value) ||
+            threat.severity.toLowerCase().includes(value)
+        );
+
+        renderThreats(filtered);
+    });
+
+fetch('/api/live-cves')
+    .then(response => response.json())
+    .then(data => {
+        const cveContainer = document.getElementById('cves');
+
+        cveContainer.innerHTML = "";
+
+        data.forEach(cve => {
+            let severityClass = "unknown";
+
+            if (cve.severity) {
+                severityClass = cve.severity.toLowerCase();
+            }
+
+            cveContainer.innerHTML += `
+                <div class="card ${severityClass}">
+                    <h2>${cve.id}</h2>
+                    <p>Severity: ${cve.severity}</p>
+                    <p>CVSS Score: ${cve.cvss}</p>
+                    <p>${cve.description}</p>
+                </div>
+            `;
+        });
+    });
+.catch(error => console.error(error));
+
 async function askAI() {
+
     const prompt = document.getElementById("aiPrompt").value;
 
     document.getElementById("aiResponse").innerHTML = `
@@ -344,7 +369,7 @@ async function askAI() {
 
     document.getElementById("aiResponse").scrollIntoView({
         behavior: "smooth"
-    });
+});
 
     const response = await fetch("/api/ai", {
         method: "POST",
@@ -363,10 +388,45 @@ async function askAI() {
     document.getElementById("aiResponse").scrollIntoView({
         behavior: "smooth"
     });
-}
+async function searchLiveCVEs() {
+    const query = document.getElementById("search").value;
+    const container = document.getElementById("cves");
 
-window.onload = loadLiveCVEs;
-setInterval(loadLiveCVEs, 300000);
+    cveContainer.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Searching live CVE intelligence...</p>
+        </div>
+    `;
+
+    container.scrollIntoView({
+        behavior: "smooth"
+    });
+
+    const response = await fetch(`/api/search-cves?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+
+    container.innerHTML = "";
+
+    if (data.length === 0) {
+        container.innerHTML = "<p>No CVEs found.</p>";
+        return;
+    }
+
+    data.forEach(cve => {
+        container.innerHTML += `
+            <div class="card">
+                <h2>${cve.id}</h2>
+                <p>${cve.description}</p>
+            </div>
+        `;
+    });
+
+    container.scrollIntoView({
+        behavior: "smooth"
+    });
+}
+}
 </script>
 
 </body>

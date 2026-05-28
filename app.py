@@ -292,7 +292,7 @@ def live_cves():
     from datetime import datetime, timedelta, timezone
 
     end_date = datetime.now(timezone.utc)
-    start_date = end_date - timedelta(days=7)
+    start_date = end_date - timedelta(days=30)
 
     start = start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     end = end_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
