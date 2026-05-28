@@ -316,5 +316,32 @@ def live_cves():
         })
 
     return jsonify(results)
+@app.route("/api/search-cves")
+def search_cves():
+    query = request.args.get("q", "")
+
+    if not query:
+        return jsonify([])
+
+    url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={query}&resultsPerPage=10"
+
+    response = requests.get(url, timeout=10)
+    data = response.json()
+
+    results = []
+
+    for item in data.get("vulnerabilities", []):
+        cve = item.get("cve", {})
+        cve_id = cve.get("id", "Unknown")
+
+        descriptions = cve.get("descriptions", [])
+        description = descriptions[0].get("value", "No description") if descriptions else "No description"
+
+        results.append({
+            "id": cve_id,
+            "description": description
+        })
+
+    return jsonify(results)
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

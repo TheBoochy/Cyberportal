@@ -53,14 +53,32 @@ input:focus {
 }
 
 .card {
-    background: linear-gradient(145deg, #111a2e, #1b2742);
-    border-left: 4px solid #00bfff;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 0 20px rgba(0,191,255,0.12);
+    background: linear-gradient(145deg, #111827, #172033);
+    border: 1px solid #00bfff;
+    border-left: 4px solid #00d4ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 6px;
+    margin-bottom: 8px;
+    box-shadow: 0 0 6px rgba(0,191,255,0.10);
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 18px rgba(0,191,255,0.25);
 }
 
+
+.card h2 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    color: #63d1ff;
+
+.card p {
+    margin: 2px 0;
+    font-size: 13px;
+    line-height: 1.2;
+
+}
 .card h2 {
     color: #63d1ff;
 }
@@ -142,12 +160,13 @@ input:focus {
     <h1>Cyber Threat Intelligence Platform</h1>
 
     <input
-        type="text"
-        id="search"
-        placeholder="Search threats..."
-    >
-
-    <div id="threats"></div>
+<input
+    type="text"
+    id="search"
+    placeholder="Search live CVEs, vendors, products..."
+    onkeydown="if(event.key === 'Enter') searchLiveCVEs()"
+>
+    
 
     <h1>Latest CVEs</h1>
 
@@ -273,6 +292,10 @@ async function askAI() {
         </div>
     `;
 
+    document.getElementById("aiResponse").scrollIntoView({
+        behavior: "smooth"
+});
+
     const response = await fetch("/api/ai", {
         method: "POST",
         headers: {
@@ -286,6 +309,48 @@ async function askAI() {
     const data = await response.json();
 
     document.getElementById("aiResponse").innerText = data.response;
+
+    document.getElementById("aiResponse").scrollIntoView({
+        behavior: "smooth"
+    });
+async function searchLiveCVEs() {
+    const query = document.getElementById("search").value;
+    const container = document.getElementById("cves");
+
+    container.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Searching live CVE intelligence...</p>
+        </div>
+    `;
+
+    container.scrollIntoView({
+        behavior: "smooth"
+    });
+
+    const response = await fetch(`/api/search-cves?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+
+    container.innerHTML = "";
+
+    if (data.length === 0) {
+        container.innerHTML = "<p>No CVEs found.</p>";
+        return;
+    }
+
+    data.forEach(cve => {
+        container.innerHTML += `
+            <div class="card">
+                <h2>${cve.id}</h2>
+                <p>${cve.description}</p>
+            </div>
+        `;
+    });
+
+    container.scrollIntoView({
+        behavior: "smooth"
+    });
+}
 }
 </script>
 
