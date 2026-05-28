@@ -100,22 +100,24 @@ input:focus {
     width: 80%;
 }
 
-.ai-box button {
-    padding: 12px 18px;
-    background: #00bfff;
+button {
+    padding: 12px 22px;
+    background: linear-gradient(145deg, #00bfff, #52c7ff);
     color: #08111f;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    margin-left: 10px;
+    margin-top: 14px;
+    font-size: 15px;
     font-weight: bold;
+    box-shadow: 0 0 12px rgba(0,191,255,0.4);
+    transition: all 0.2s ease;
 }
 
-.ai-box button:hover {
-    background: #52c7ff;
-    box-shadow: 0 0 12px #52c7ff;
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 18px rgba(82,199,255,0.8);
 }
-
 #aiResponse {
     margin-top: 20px;
     color: #ffffff;
@@ -150,6 +152,31 @@ input:focus {
         transform: rotate(360deg);
     }
 }
+.intro {
+    color: #b7d8f7;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 950px;
+    margin-top: 12px;
+    margin-bottom: 28px;
+}
+#analyzeBtn {
+    padding: 12px 22px !important;
+    background: linear-gradient(145deg, #00bfff, #52c7ff) !important;
+    color: #08111f !important;
+    border: none !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    margin-top: 14px !important;
+    font-size: 15px !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 12px rgba(0,191,255,0.45) !important;
+}
+
+#analyzeBtn:hover {
+    background: #52c7ff !important;
+    box-shadow: 0 0 18px rgba(82,199,255,0.8) !important;
+}
 
 </style>
 </head>
@@ -158,6 +185,10 @@ input:focus {
 <div class="container">
 
     <h1>Cyber Threat Intelligence Platform</h1>
+<p class="intro">
+    This platform provides live CVE intelligence, vulnerability search, and AI-assisted threat analysis.
+    Use the search bar to look up recent vulnerabilities, vendors, or products, and use the AI section to ask security questions in plain language.
+</p>
 
     <input
 <input
@@ -171,7 +202,7 @@ input:focus {
     <h1>Latest CVEs</h1>
 
     <div id="cves"></div>
-    <div class="ai-box">
+<div class="ai-box">
 
     <h2>AI Threat Analysis</h2>
 
@@ -181,13 +212,25 @@ input:focus {
         placeholder="Ask about a CVE or malware..."
     >
 
-    <button onclick="askAI()">
-        Analyze
-    </button>
-
+<button
+    id="analyzeBtn"
+    onclick="askAI()"
+    style="
+        padding: 12px 22px;
+        background: linear-gradient(145deg, #00bfff, #52c7ff);
+        color: #08111f;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 14px;
+        font-size: 15px;
+        font-weight: bold;
+        box-shadow: 0 0 12px rgba(0,191,255,0.45);
+    "
+>
+    Analyze
+</button>
     <div id="aiResponse"></div>
-
-</div>
 
 </div>
 
