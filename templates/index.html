@@ -3,101 +3,137 @@
 <head>
     <title>Cyber Threat Intelligence Platform</title>
 
+
 <style>
+html, body {
+    background: #050b14 !important;
+    color: #d7e7ff !important;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
+    background:
+        linear-gradient(rgba(0,191,255,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,191,255,0.035) 1px, transparent 1px),
+        radial-gradient(circle at top, #0b1f33 0%, #050b14 45%, #02040a 100%) !important;
+    background-size: 45px 45px, 45px 45px, cover !important;
+}
+
+.container {
+    width: 90%;
+    margin: auto;
+    padding-top: 30px;
+}
+
+h1 {
+    color: #52c7ff;
+    border-bottom: 2px solid #00bfff;
+    padding-bottom: 15px;
+    text-shadow: 0 0 10px rgba(82,199,255,0.5);
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: #09111f;
+    color: white;
+    border: 1px solid #00bfff;
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    box-shadow: 0 0 12px #00bfff;
+}
+
+.card {
+    background: linear-gradient(145deg, #111a2e, #1b2742);
+    border-left: 4px solid #00bfff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 0 20px rgba(0,191,255,0.12);
+}
+
+.card h2 {
+    color: #63d1ff;
+}
 
 .ai-box {
     margin-top: 40px;
-    padding: 20px;
-    border: 1px solid #00ff88;
-    border-radius: 10px;
-    background-color: #111827;
+    padding: 25px;
+    border: 1px solid #00bfff;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #111827, #172033);
+    box-shadow: 0 0 25px rgba(0,191,255,0.15);
 }
 
 .ai-box h2 {
-    color: #00ff88;
+    color: #52c7ff;
 }
 
 .ai-box input {
     width: 80%;
-    padding: 12px;
-    margin-top: 10px;
-    background: #1f2937;
-    color: white;
-    border: 1px solid #00ff88;
 }
 
 .ai-box button {
-    padding: 12px;
-    background: #00ff88;
+    padding: 12px 18px;
+    background: #00bfff;
+    color: #08111f;
     border: none;
+    border-radius: 8px;
     cursor: pointer;
     margin-left: 10px;
+    font-weight: bold;
+}
+
+.ai-box button:hover {
+    background: #52c7ff;
+    box-shadow: 0 0 12px #52c7ff;
 }
 
 #aiResponse {
     margin-top: 20px;
     color: #ffffff;
+    line-height: 1.6;
     white-space: pre-wrap;
 }
-    
-        body {
-            background-color: #0b0f17;
-            color: #8aff80;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
 
-        h1, h2 {
-            color: #7CFF7C;
-        }
+.loading {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #52c7ff;
+    margin-top: 20px;
+    font-size: 18px;
+}
 
-        .container {
-            width: 90%;
-            margin: auto;
-            padding: 20px;
-        }
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 3px solid rgba(82,199,255,0.2);
+    border-top: 3px solid #52c7ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
 
-        .card {
-            background: #141a26;
-            border-left: 6px solid #7CFF7C;
-            margin-bottom: 20px;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-        }
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
 
-        .critical {
-            border-left-color: red;
-        }
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
-        .high {
-            border-left-color: orange;
-        }
-
-        .medium {
-            border-left-color: yellow;
-        }
-
-        .low {
-            border-left-color: green;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            background: #1b2233;
-            border: 1px solid #333;
-            color: white;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .type {
-            color: #82aaff;
-        }
-    </style>
+</style>
 </head>
 <body>
 
@@ -229,6 +265,13 @@ fetch('/api/cves')
 async function askAI() {
 
     const prompt = document.getElementById("aiPrompt").value;
+
+    document.getElementById("aiResponse").innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Analyzing threat intelligence...</p>
+        </div>
+    `;
 
     const response = await fetch("/api/ai", {
         method: "POST",
