@@ -248,7 +248,7 @@ document.getElementById('search')
         renderThreats(filtered);
     });
 
-fetch('/api/cves')
+fetch('/api/live-cves')
     .then(response => response.json())
     .then(data => {
 

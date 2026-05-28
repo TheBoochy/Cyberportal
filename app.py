@@ -287,15 +287,33 @@ Provide a detailed cybersecurity analysis with:
         "response": answer
     })
 
-
 @app.route("/api/live-cves")
 def live_cves():
+    from datetime import datetime, timedelta, timezone
 
-    url = "https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=10"
+    end_date = datetime.now(timezone.utc)
+    start_date = end_date - timedelta(days=7)
 
-    response = requests.get(url)
+    start = start_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    end = end_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+    url = (
+        "https://services.nvd.nist.gov/rest/json/cves/2.0"
+        f"?pubStartDate={start}"
+        f"&pubEndDate={end}"
+        "&resultsPerPage=10"
+    )
+
+    response = requests.get(url, timeout=10)
+
+    if response.status_code != 200:
+        return jsonify({
+            "error": "Failed to fetch CVEs from NVD",
+            "status_code": response.status_code,
+            "details": response.text[:300]
+        }), 500
+
     data = response.json()
-
     vulnerabilities = data.get("vulnerabilities", [])
 
     results = []
@@ -303,19 +321,40 @@ def live_cves():
     for item in vulnerabilities:
         cve = item.get("cve", {})
         cve_id = cve.get("id", "Unknown")
+        published = cve.get("published", "Unknown")
 
         descriptions = cve.get("descriptions", [])
-        description = "No description available"
+        description = descriptions[0].get("value", "No description available") if descriptions else "No description available"
 
-        if descriptions:
-            description = descriptions[0].get("value", description)
+        metrics = cve.get("metrics", {})
+        severity = "UNKNOWN"
+        cvss = "N/A"
+
+        if "cvssMetricV31" in metrics:
+            metric = metrics["cvssMetricV31"][0]
+            severity = metric["cvssData"].get("baseSeverity", "UNKNOWN")
+            cvss = metric["cvssData"].get("baseScore", "N/A")
+        elif "cvssMetricV30" in metrics:
+            metric = metrics["cvssMetricV30"][0]
+            severity = metric["cvssData"].get("baseSeverity", "UNKNOWN")
+            cvss = metric["cvssData"].get("baseScore", "N/A")
+        elif "cvssMetricV2" in metrics:
+            metric = metrics["cvssMetricV2"][0]
+            severity = metric.get("baseSeverity", "UNKNOWN")
+            cvss = metric["cvssData"].get("baseScore", "N/A")
 
         results.append({
             "id": cve_id,
+            "published": published,
+            "severity": severity,
+            "cvss": cvss,
             "description": description
         })
 
+    results.sort(key=lambda x: x["published"], reverse=True)
+
     return jsonify(results)
+
 @app.route("/api/search-cves")
 def search_cves():
     query = request.args.get("q", "")
